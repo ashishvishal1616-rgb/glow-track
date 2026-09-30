@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GlowTrack">
+<title>GlowTrack — 90 Day Skin Routine</title>
+<style>
+:root{--bg:#f5f8f7;--card:#fff;--ink:#17312f;--muted:#71807d;--accent:#0f766e;--accent2:#dff4ef;--line:#e4ece9;--warn:#b45309;--danger:#b91c1c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+.app{max-width:760px;margin:auto;padding:18px 14px 90px}.hero{background:linear-gradient(135deg,#0f766e,#159a88);color:white;border-radius:26px;padding:22px 20px;box-shadow:0 12px 30px #0f766e20}
+.hero h1{margin:0 0 5px;font-size:28px}.hero p{margin:0;opacity:.88}.pill{display:inline-block;background:#ffffff22;padding:7px 10px;border-radius:999px;font-size:12px;margin-top:14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px}.stat b{font-size:23px;display:block}.stat span{font-size:12px;color:var(--muted)}
+.card{margin:12px 0}.card h2{font-size:18px;margin:0 0 12px}.sub{color:var(--muted);font-size:13px}
+.progress{height:10px;background:#e9efed;border-radius:99px;overflow:hidden;margin:10px 0}.bar{height:100%;background:var(--accent);width:0%;transition:.25s}
+.tabs{display:flex;gap:8px;overflow:auto;margin:15px 0}.tab{border:1px solid var(--line);background:white;border-radius:999px;padding:10px 14px;white-space:nowrap}.tab.active{background:var(--accent);color:white;border-color:var(--accent)}
+.step{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}.step:last-child{border-bottom:0}.step input{width:22px;height:22px;accent-color:var(--accent);margin-top:2px}.step b{display:block}.step small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}
+.time{margin-left:auto;color:var(--accent);font-weight:700;font-size:12px}
+button{font:inherit;cursor:pointer}.btn{border:0;border-radius:12px;padding:11px 14px;background:var(--accent);color:#fff;font-weight:700}.btn.secondary{background:var(--accent2);color:var(--accent)}.btn.danger{background:#fee2e2;color:var(--danger)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.note{background:#fff8e7;border:1px solid #f5d99a;color:#7c4a03;padding:12px;border-radius:14px;font-size:13px;line-height:1.4}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.day{aspect-ratio:1;border-radius:9px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;background:white}.day.done{background:#bfe9df;border-color:#7bcfc0}.day.today{outline:2px solid var(--accent);outline-offset:1px}
+input[type=time],input[type=date],textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px;background:white;color:var(--ink)}textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}.footer{color:var(--muted);font-size:11px;text-align:center;margin-top:22px}
+@media(max-width:480px){.grid{grid-template-columns:repeat(3,1fr)}.stat{padding:12px 9px}.stat b{font-size:20px}}
+
+.install-banner{display:none;background:#ecfdf5;border:1px solid #a7e3d4;color:#115e59;border-radius:16px;padding:12px;margin:12px 0;align-items:center;gap:10px}
+.install-banner.show{display:flex}.install-banner .grow{flex:1}.install-banner b{display:block;font-size:14px}.install-banner small{display:block;margin-top:3px;color:#52706c}
+.offline-badge{font-size:11px;color:#52706c;margin-top:7px}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="hero">
+    <h1>GlowTrack ✨</h1>
+    <p>Your 90-day skincare routine, reminders & progress.</p>
+    <span class="pill" id="phasePill">Days 1–30 · Build tolerance</span>
+  </section>
+  <div class="install-banner" id="installBanner">
+    <div class="grow"><b>📱 Install GlowTrack</b><small>Add it to your Android home screen for an app-like experience.</small></div>
+    <button class="btn" id="installBtn">Install</button>
+    <button class="btn secondary" id="dismissInstall">Later</button>
+  </div>
+  <div class="offline-badge" id="onlineStatus">● Online</div>
+
+  <div class="grid">
+    <div class="stat"><b id="dayNo">1</b><span>Day</span></div>
+    <div class="stat"><b id="streak">0</b><span>Day streak</span></div>
+    <div class="stat"><b id="completion">0%</b><span>Today</span></div>
+  </div>
+
+  <div class="card">
+    <h2>90-day progress</h2>
+    <div class="progress"><div class="bar" id="totalBar"></div></div>
+    <div class="sub" id="totalText">0 of 90 days completed</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('today',this)">Today</button>
+    <button class="tab" onclick="showTab('plan',this)">90-Day Plan</button>
+    <button class="tab" onclick="showTab('reminders',this)">Reminders</button>
+    <button class="tab" onclick="showTab('progress',this)">Progress</button>
+  </div>
+
+  <main id="today">
+    <div class="card">
+      <div class="row"><div><h2 id="dateTitle">Today's routine</h2><div class="sub" id="phaseText"></div></div><button class="btn secondary" onclick="resetToday()">Reset</button></div>
+    </div>
+
+    <div class="card">
+      <h2>☀️ Morning</h2>
+      <div id="morningSteps"></div>
+    </div>
+
+    <div class="card">
+      <h2>🌙 Night</h2>
+      <div id="nightSteps"></div>
+    </div>
+
+    <div class="card">
+      <h2>Daily check-in</h2>
+      <div class="sub" style="margin-bottom:8px">How did your skin feel today?</div>
+      <div class="actions">
+        <button class="btn secondary" onclick="setMood('Calm')">😊 Calm</button>
+        <button class="btn secondary" onclick="setMood('Oily')">💧 Oily</button>
+        <button class="btn secondary" onclick="setMood('Irritated')">⚠️ Irritated</button>
+        <button class="btn secondary" onclick="setMood('Breakout')">🔴 Breakout</button>
+      </div>
+      <div style="margin-top:10px"><textarea id="notes" placeholder="Optional note: oiliness, new pimples, irritation..."></textarea></div>
+      <div style="margin-top:8px"><button class="btn" onclick="saveNotes()">Save check-in</button></div>
+    </div>
+  </main>
+
+  <main id="plan" style="display:none">
+    <div class="card">
+      <h2>🌱 Days 1–30</h2>
+      <p class="sub">Build tolerance. Week 1: serum every other night; from Week 2, use serum nightly if comfortable.</p>
+    </div>
+    <div class="card"><h2>🌿 Days 31–60</h2><p class="sub">Keep the full morning and night routine consistent. Focus on sunscreen and preventing new breakouts.</p></div>
+    <div class="card"><h2>✨ Days 61–90</h2><p class="sub">Maintain the same routine and compare photos from Day 1, 30, 60 and 90.</p></div>
+    <div class="note">Do not add scrubs, lemon, baking soda, toothpaste, or several new acids/serums just to speed things up. Stop a product if you develop significant irritation.</div>
+  </main>
+
+  <main id="reminders" style="display:none">
+    <div class="card">
+      <h2>⏰ Routine reminders</h2>
+      <p class="sub">Choose your preferred times. The app can request notification permission and remind you while this page/PWA is running. For reliable background notifications, install the PWA version on a supported HTTPS host.</p>
+      <div style="margin-top:12px"><label>Morning time</label><input type="time" id="morningTime" value="08:00"></div>
+      <div style="margin-top:12px"><label>Night time</label><input type="time" id="nightTime" value="21:30"></div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn" onclick="saveReminders()">Save reminders</button>
+        <button class="btn secondary" onclick="requestNotifications()">Enable notifications</button>
+      </div>
+      <div class="sub" id="notifyStatus" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h2>Reminder messages</h2>
+      <p>☀️ “Morning skincare time — cleanse, toner, serum, moisturizer, SPF 50.”</p>
+      <p>🌙 “Night skincare time — cleanse, toner, serum, moisturizer.”</p>
+    </div>
+  </main>
+
+  <main id="progress" style="display:none">
+    <div class="card"><h2>📅 90-day calendar</h2><div class="calendar" id="calendar"></div></div>
+    <div class="card"><h2>📸 Photo checkpoints</h2><p class="sub">Take front + left + right photos in similar lighting on Day 1, Day 30, Day 60 and Day 90. This app does not upload them anywhere.</p></div>
+    <div class="card"><h2>🧠 Skin goal</h2><p class="sub">Clearer-looking skin · less excess oil · gradually fading blemish marks · consistent sunscreen.</p></div>
+  </main>
+
+  <div class="footer">GlowTrack works offline and stores routine data locally in your browser. Push reminders require HTTPS + notification permission + Firebase Cloud Messaging setup. This is a routine tracker, not a medical diagnosis.</div>
+</div>
+
+<script>
+const KEY='glowtrack_v1';
+const state=JSON.parse(localStorage.getItem(KEY)||'null')||{start:new Date().toISOString().slice(0,10),days:{},morning:'08:00',night:'21:30'};
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function dateOnly(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
+function dayIndex(){
+ const s=dateOnly(new Date(state.start+'T00:00:00')), t=dateOnly(new Date());
+ return Math.max(1,Math.min(90,Math.floor((t-s)/86400000)+1));
+}
+function phase(n){return n<=30?'Days 1–30 · Build tolerance':n<=60?'Days 31–60 · Fade marks + texture':'Days 61–90 · Maintain + assess'}
+function stepsFor(n){
+ let serumAllowed = n>=8 || (n>=3 && n<=7 && n%2===1);
+ const morning=[
+  ['Cleanser','Small amount; massage 20–30 sec, rinse.',''],
+  ['Toner','Apply a light layer and let it settle.',''],
+ ];
+ if(n>=11) morning.push(['Niacinamide serum','2–3 drops; spread gently.','']);
+ morning.push(['Moisturizer','Thin layer.','']);
+ morning.push(['SPF 50 sunscreen','Generous face + neck application; reapply when outdoors for extended periods.','']);
+ const night=[['Cleanser','Small amount; massage 20–30 sec, rinse.','']];
+ night.push(['Toner','Apply a light layer.','']);
+ if(serumAllowed) night.push(['Niacinamide serum','2–3 drops; avoid immediate eye area.','']);
+ night.push(['Moisturizer','Thin layer.','']);
+ return {morning,night};
+}
+function render(){
+ const n=dayIndex(), d=state.days[n]||{m:[],n:[],done:false,note:'',mood:''};
+ document.getElementById('dayNo').textContent=n;
+ document.getElementById('phasePill').textContent=phase(n);
+ document.getElementById('phaseText').textContent=phase(n);
+ document.getElementById('dateTitle').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+ document.getElementById('morningTime').value=state.morning;
+ document.getElementById('nightTime').value=state.night;
+ document.getElementById('notes').value=d.note||'';
+ const st=stepsFor(n); renderSteps('morningSteps',st.morning,d.m||[],n,'m'); renderSteps('nightSteps',st.night,d.n||[],n,'n');
+ const all=st.morning.length+st.night.length, checked=(d.m||[]).filter(Boolean).length+(d.n||[]).filter(Boolean).length;
+ document.getElementById('completion').textContent=Math.round(checked/all*100)+'%';
+ const completedDays=Object.values(state.days).filter(x=>x.done).length;
+ document.getElementById('totalBar').style.width=(completedDays/90*100)+'%';
+ document.getElementById('totalText').textContent=completedDays+' of 90 days completed';
+ let streak=0; for(let i=n;i>=1;i--){if(state.days[i]?.done)streak++;else break}
+ document.getElementById('streak').textContent=streak;
+ renderCalendar();
+}
+function renderSteps(id,steps,checks,n,type){
+ const el=document.getElementById(id); el.innerHTML='';
+ steps.forEach((s,i)=>{
+  const row=document.createElement('label'); row.className='step';
+  row.innerHTML=`<input type="checkbox" ${checks[i]?'checked':''}><div><b>${i+1}. ${s[0]}</b><small>${s[1]}</small></div>`;
+  row.querySelector('input').onchange=e=>{
+    if(!state.days[n])state.days[n]={m:[],n:[],done:false};
+    state.days[n][type][i]=e.target.checked;
+    const ss=stepsFor(n), total=ss.morning.length+ss.night.length;
+    const c=(state.days[n].m||[]).filter(Boolean).length+(state.days[n].n||[]).filter(Boolean).length;
+    state.days[n].done=c===total; save(); render();
+  };
+  el.appendChild(row);
+ });
+}
+function resetToday(){const n=dayIndex();delete state.days[n];save();render()}
+function setMood(m){const n=dayIndex();state.days[n] ||= {m:[],n:[],done:false};state.days[n].mood=m;save()}
+function saveNotes(){const n=dayIndex();state.days[n] ||= {m:[],n:[],done:false};state.days[n].note=document.getElementById('notes').value;save();render()}
+function showTab(id,btn){document.querySelectorAll('main').forEach(x=>x.style.display='none');document.getElementById(id).style.display='block';document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active')}
+function renderCalendar(){
+ const el=document.getElementById('calendar');el.innerHTML='';
+ for(let i=1;i<=90;i++){const d=document.createElement('div');d.className='day'+(state.days[i]?.done?' done':'')+(i===dayIndex()?' today':'');d.textContent=i;d.title=state.days[i]?.done?'Completed':'Not completed';el.appendChild(d)}
+}
+function requestNotifications(){
+ if(!('Notification' in window)){document.getElementById('notifyStatus').textContent='Notifications are not supported by this browser.';return}
+ Notification.requestPermission().then(p=>{document.getElementById('notifyStatus').textContent=p==='granted'?'Notifications enabled.':'Permission not granted.';});
+}
+function saveReminders(){state.morning=document.getElementById('morningTime').value;state.night=document.getElementById('nightTime').value;save();scheduleCheck();document.getElementById('notifyStatus').textContent='Reminder times saved.'}
+function notify(title,body){if('Notification'in window&&Notification.permission==='granted')new Notification(title,{body})}
+let lastM='',lastN='';
+function scheduleCheck(){
+ clearInterval(window._timer);
+ window._timer=setInterval(()=>{
+   const now=new Date(), hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),key=hh+':'+mm;
+   const stamp=new Date().toDateString()+key;
+   if(key===state.morning && lastM!==stamp){lastM=stamp;notify('☀️ Morning skincare time','Cleanser → toner → serum → moisturizer → SPF 50');}
+   if(key===state.night && lastN!==stamp){lastN=stamp;notify('🌙 Night skincare time','Cleanser → toner → serum → moisturizer');}
+ },15000);
+}
+scheduleCheck();render();
+
+// PWA install handling
+let deferredInstallPrompt = null;
+const installBanner = document.getElementById('installBanner');
+const installBtn = document.getElementById('installBtn');
+const dismissInstall = document.getElementById('dismissInstall');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  installBanner.classList.add('show');
+});
+installBtn?.addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  installBanner.classList.remove('show');
+});
+dismissInstall?.addEventListener('click', () => installBanner.classList.remove('show'));
+
+function updateOnlineStatus(){
+  const el=document.getElementById('onlineStatus');
+  if(el) el.textContent=navigator.onLine?'● Online':'● Offline — your local progress still works';
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// Register the offline/cache service worker.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('GlowTrack service worker registered'))
+      .catch(err => console.warn('Service worker registration failed', err));
+  });
+}
+
+</script>
+</body>
+</html>
